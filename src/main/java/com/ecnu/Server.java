@@ -14,7 +14,7 @@ import java.util.List;
 
 public class Server {
     private static final int BUFFER_SIZE = 8192;
-    private static List<ClientHandler> clients = new ArrayList();
+    private static final List<ClientHandler> clients = new ArrayList<>();
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -23,6 +23,10 @@ public class Server {
         }
         try {
                 int port = Integer.parseInt(args[0]);
+                if(port < 1024 || port > 65535) {
+                    System.out.println("port number should be between 1024 and 65535");
+                    return;
+                }
                 ServerSocket var2 = new ServerSocket(port);
                 System.out.println("Server is running on port: " + port);
                 Thread serverInputStream = new Thread(() -> {
@@ -58,7 +62,7 @@ public class Server {
             Iterator<ClientHandler> iterator = clients.iterator();
 
             while(iterator.hasNext()) {
-                ClientHandler clientHandler = (ClientHandler)iterator.next();
+                ClientHandler clientHandler = iterator.next();
 
                 try {
                     clientHandler.sendMessage(data);
@@ -87,7 +91,7 @@ public class Server {
             try {
                 while(true) {
                     int length = in.readInt();
-                    byte[] buffer = new byte[Math.min(length, 8192)];
+                    byte[] buffer = new byte[Math.min(length, BUFFER_SIZE)];
                     StringBuilder message = new StringBuilder();
 
                     int remaining = length;
@@ -96,7 +100,9 @@ public class Server {
                         if (read == -1) {
                             break;
                         }
-                        message.append(new String(buffer, 0, read, StandardCharsets.UTF_8));
+                        String bufferString = new String(buffer, 0, read, StandardCharsets.UTF_8);
+                        System.out.println("\n\nreceied buffer:\n\n"+bufferString);
+                        message.append(bufferString);
                         remaining -= read;
                     }
 

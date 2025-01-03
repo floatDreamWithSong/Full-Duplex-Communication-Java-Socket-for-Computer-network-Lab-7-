@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <targets>
+      <target name="root@106.54.198.225:22" type="ssh/sftp" uuid="09b18eb1-a175-420a-9ed9-8720edcb8178">
+        <config>
+          <option name="projectRootOnTarget" value="/root/socket_lab7" />
+          <option name="serverName" value="root@106.54.198.225:22 agent" />
+        </config>
+        <ContributedStateBase type="JavaLanguageRuntime">
+          <config>
+            <option name="homePath" value="/" />
+            <option name="javaVersionString" value="1.8.0_362" />
+          </config>
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>

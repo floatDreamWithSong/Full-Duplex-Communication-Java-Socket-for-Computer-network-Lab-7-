@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class Client {
     private static final int BUFFER_SIZE = 8192;
@@ -25,6 +26,10 @@ public class Client {
 
             try {
                 int port = Integer.parseInt(args[1]);
+                if (port < 1024 || port > 65535) {
+                    System.out.println("port number should be between 1024 and 65535");
+                    return;
+                }
                 Socket socket = new Socket(hostname, port);
                 System.out.println("connected to " + hostname + ":" + port);
                 System.out.println("input format");
@@ -65,9 +70,22 @@ public class Client {
                     try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
                         while(true) {
                             int length = in.readInt();
-                            byte[] data = new byte[length];
-                            in.readFully(data);
-                            System.out.println("receive message from server: " + new String(data, "UTF-8"));
+                            byte[] buffer = new byte[Math.min(length, BUFFER_SIZE)];
+                            StringBuilder message = new StringBuilder();
+
+                            int remaining = length;
+                            while(remaining > 0) {
+                                int read = in.read(buffer, 0, Math.min(remaining, buffer.length));
+                                if (read == -1) {
+                                    break;
+                                }
+                                String bufferString = new String(buffer, 0, read, StandardCharsets.UTF_8);
+                                System.out.println("\n\nreceied buffer:\n\n"+bufferString);
+                                message.append(bufferString);
+                                remaining -= read;
+                            }
+
+                            System.out.println("receive from server: " + message);
                         }
                     } catch (IOException e) {
                         System.err.println("An error occurred when receiving message: " + e.getMessage());
@@ -75,8 +93,6 @@ public class Client {
                 });
                 sendThread.start();
                 receiveThread.start();
-            } catch (NumberFormatException e) {
-                System.err.println("invalid port number" + e.getMessage());
             } catch (IOException e) {
                 System.err.println("connection error: " + e.getMessage());
             }
@@ -86,7 +102,6 @@ public class Client {
 
     private static void handleTextInput(DataOutputStream out, BufferedReader stdin, String initialText) throws IOException {
         StringBuilder message = (new StringBuilder(initialText)).append("\n");
-        int enterCount = 0;
 
         while(true) {
             String var5 = stdin.readLine();
@@ -95,16 +110,12 @@ public class Client {
             }
 
             if (var5.isEmpty()) {
-                ++enterCount;
-                if (enterCount == 1) {
-                    byte[] var6 = message.toString().getBytes("UTF-8");
-                    out.writeInt(var6.length);
-                    out.write(var6);
-                    out.flush();
-                    break;
-                }
+                byte[] var6 = message.toString().getBytes(StandardCharsets.UTF_8);
+                out.writeInt(var6.length);
+                out.write(var6);
+                out.flush();
+                break;
             } else {
-                enterCount = 0;
                 message.append(var5).append("\n");
             }
         }
